@@ -1,44 +1,79 @@
-// Copyright 2018 The Flutter team. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
+void main() => runApp(new AccessControlApp());
 
-// void main() => runApp(MyApp());
-
-
-// This example app is only one page
-void main() {
-  runApp(
-    MaterialApp(
-      home: Scaffold(
-        body: PegProgressIndicator(),
-      ),
-    ),
-  );
+class AccessControlApp extends StatefulWidget {
+  _AccessControlAppState createState() => _AccessControlAppState();
 }
 
-// This widget is the progress indicator container
-class PegProgressIndicator extends StatefulWidget {
+class _AccessControlAppState extends State<AccessControlApp> {
+  String res;
+
   @override
-  _PegProgressIndicatorState createState() => _PegProgressIndicatorState();
-}
+  void initState() {
+    res = "";
+    super.initState();
+  }
 
-
-class _PegProgressIndicatorState extends State<PegProgressIndicator> {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Center(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-             Text('Hello World'),
-             Text('Hello Hass')
-          ],
+    return new MaterialApp(
+      title: 'Flutter Demo',
+      theme: new ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text("Grpc ❤️ Flutter"),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              FlatButton(
+                  onPressed: () async => _dingDong(),
+                  color: Theme.of(context).primaryColor,
+                  child: Text(
+                    "Let's say hi!",
+                    style: TextStyle(color: Colors.white),
+                  )),
+              res.isNotEmpty ? Text("Server says: $res") : Container(),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  Future<void> _dingDong() async {
+    print("prover dingdong");
+
+    final response = await http.get(
+        'https://homeassistant.local:8123/hassio/local_access_control/resources/data/all');
+
+    if (response.statusCode == 200) {
+      // If the server did return a 200 OK response,
+      // then parse the JSON.
+
+      var ret = jsonDecode(response.body);
+      print(ret);
+      print(ret[0]['mac']);
+      setState(() {
+        res = ret[0]['mac'].toString();
+      });
+    } else {
+      // If the server did not return a 200 OK response,
+      // then throw an exception.
+      throw Exception('Failed to load album');
+    }
+    // setState(() {
+    //   res = response;
+    // });
+
+    // var ret = await DingDongService.DingDong();
+    // print('Greeter client received: ${ret.message}');
   }
 }
